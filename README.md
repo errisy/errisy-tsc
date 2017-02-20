@@ -161,23 +161,11 @@ export class AppService extends rpc.RPCService {
 ```
 
 
-##Work with errisy-server
-
-errisy-server is an out-of-box http server written fully in the async/await middlewares.
-
-##Warning of More Features:
-I also made the TypeScript compiler to generate async methods that support cancel!
-[TypeScript __awaiter support cancel!](https://github.com/Microsoft/TypeScript/issues/13854)
-
-** In both front end and back end, you may have cases where you want to stop a Promise gracefully, but you can't do it with stardard Promise **
-
-So here, without using RxJS, a few lines of codes in the __awaiter solved the cancel problem! In the errisy-tsc compiler, the __awaiter function returns a Task object instead of Promise (when you have npm module errisy-task available).
-
-** Task object is cancellable and will append all internal Promises or Tasks in your async functions as its children and remove them when they are completed (remove to avoid error when you run animation script for ever) ** So when you cancel the task, it cancels all child tasks in the async function. That turns your async function very managable!
-
-
 ## MongoDB access
 errisy-tsc also transpiles \*.data.ts to \*.sys.ts for database access.
+
+Classes decorated with **@rpc.entity** are converted to data entity (typed collection) for MongoDB access. All queries are constrained with type to avoid errors.
+Classes decorated with **@rpc.struct** are converted to query types that can be used in subfield queries.
 
 er.data.ts
 
@@ -380,3 +368,18 @@ export class erDataSet extends DataSet{
 }
 
 ```
+
+
+##Work with [errisy-server](https://www.npmjs.com/package/errisy-server)
+
+[errisy-server](https://www.npmjs.com/package/errisy-server) is an out-of-box http server written fully in the async/await middlewares.
+
+##Warning of More Features:
+I also made the TypeScript compiler to generate async methods that support cancel!
+[TypeScript __awaiter support cancel!](https://github.com/Microsoft/TypeScript/issues/13854)
+
+** In both front end and back end, you may have cases where you want to stop a Promise gracefully, but you can't do it with stardard Promise **
+
+So here, without using RxJS, a few lines of codes in the __awaiter solved the cancel problem! In the errisy-tsc compiler, the __awaiter function returns a Task object instead of Promise (when you have npm module errisy-task available).
+
+** Task object is cancellable and will append all internal Promises or Tasks in your async functions as its children and remove them when they are completed (remove to avoid error when you run animation script for ever) ** So when you cancel the task, it cancels all child tasks in the async function. That turns your async function very managable!
