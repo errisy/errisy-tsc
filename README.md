@@ -174,3 +174,209 @@ I also made the TypeScript compiler to generate async methods that support cance
 So here, without using RxJS, a few lines of codes in the __awaiter solved the cancel problem! In the errisy-tsc compiler, the __awaiter function returns a Task object instead of Promise (when you have npm module errisy-task available).
 
 ** Task object is cancellable and will append all internal Promises or Tasks in your async functions as its children and remove them when they are completed (remove to avoid error when you run animation script for ever) ** So when you cancel the task, it cancels all child tasks in the async function. That turns your async function very managable!
+
+
+## MongoDB access
+errisy-tsc also transpiles \*.data.ts to \*.sys.ts for database access.
+
+er.data.ts
+
+```
+import * as rpc from 'errisy-rpc';
+
+export interface IUser {
+    _id: string;
+    password: string;
+    token: string;
+}
+
+@rpc.entity
+export class User implements IUser {
+    public _id: string;
+    public password: string;
+    public token: string;
+}
+
+/**
+ * Data entity enables query
+ */
+@rpc.entity
+export class Pet {
+    public _id: string;
+    /** index will enable automatic index set up in MongoDB for query optimization */
+    @rpc.index.ascending
+    public name: string;
+    public images: string[];
+    public body: PetBody;
+}
+
+/**
+ * data struct is not a collection in mongoDB
+ */
+@rpc.struct
+export class PetBody {
+    public color: string;
+    public weight: number;
+}
+
+/**
+ * Session can be used to store any data, not just expireTime
+ */
+@rpc.entity
+export class Session {
+    public _id: string;
+    public username: string;
+    public expireTime: number;
+}
+```
+
+The following data entity file is automatically transpiled for mongoDB access with type constrains
+**You need [errisy-mongo](https://www.npmjs.com/package/errisy-mongo) for this feature**
+[errisy-mongo](https://www.npmjs.com/package/errisy-mongo) defines all the mongoDB TypeScript wraps.
+```
+//Data Service file generate by RPC compiler.
+//All your data definitions should be in the same *.data.ts file.
+import { 
+		EntityCollection, DataSet, NumberQuery, StringQuery, BooleanQuery, NumberArrayQuery, StringArrayQuery, BooleanArrayQuery, IObjectArrayQuery,
+		IArrayQuery, IObjectQuery, IArrayProject, Aggregation
+	} from 'errisy-mongo';
+import { User, Pet, PetBody, Session } from './er.data';
+import * as rpc from 'errisy-rpc';
+export class UserQuery {
+	public _id?: StringQuery;
+	public password?: StringQuery;
+	public token?: StringQuery;
+	public $or?: UserQuery[];
+	public $and?: UserQuery[];
+}
+export class UserCollection extends EntityCollection<User, UserQuery, UserProject> {
+	public name: string = 'User';
+}
+export class UserProject {
+	constructor() {
+		let $dict: {[key: string]:any} = {};
+	}
+	public _id?: number;
+	public password?: number;
+	public token?: number;
+}
+export class PetQuery {
+	public _id?: StringQuery;
+	public name?: StringQuery;
+	public images?: StringArrayQuery;
+	public body?: PetBodyQuery;
+	public $or?: PetQuery[];
+	public $and?: PetQuery[];
+}
+export class PetCollection extends EntityCollection<Pet, PetQuery, PetProject> {
+	public name: string = 'Pet';
+}
+export class PetProject {
+	constructor() {
+		let $dict: {[key: string]:any} = {};
+		Object.defineProperty(this, 'body',
+			{
+				set: ($value: PetBodyProject|number) => {
+					switch(typeof $value){
+						case 'number':
+							$dict['body'] = $value;
+							break;
+						default:
+							for (let key in <any>$value) {
+								this['body.' + key] = $value[key];
+							}
+							break;
+					}
+				},
+				get: () => $dict['body']
+			});
+	}
+	public _id?: number;
+	public name?: number;
+	public images?: number;
+	public body?:PetBodyProject|number;
+}
+export class PetBodyQuery {
+	public color?: StringQuery;
+	public weight?: NumberQuery;
+	public $or?: PetBodyQuery[];
+	public $and?: PetBodyQuery[];
+}
+export class PetBodyProject {
+	constructor() {
+		let $dict: {[key: string]:any} = {};
+	}
+	public color?: number;
+	public weight?: number;
+}
+export class SessionQuery {
+	public _id?: StringQuery;
+	public username?: StringQuery;
+	public expireTime?: NumberQuery;
+	public $or?: SessionQuery[];
+	public $and?: SessionQuery[];
+}
+export class SessionCollection extends EntityCollection<Session, SessionQuery, SessionProject> {
+	public name: string = 'Session';
+}
+export class SessionProject {
+	constructor() {
+		let $dict: {[key: string]:any} = {};
+	}
+	public _id?: number;
+	public username?: number;
+	public expireTime?: number;
+}
+export class erDataSet extends DataSet{
+	public async User(suffix?: string): Promise<UserCollection> {
+		if (!this.$db) await this.$connect();
+		return new Promise<UserCollection>((resolve, reject) => {
+			resolve(new UserCollection(this.$db, suffix));
+		});
+	}
+	public async Pet(suffix?: string): Promise<PetCollection> {
+		if (!this.$db) await this.$connect();
+		return new Promise<PetCollection>((resolve, reject) => {
+			resolve(new PetCollection(this.$db, suffix));
+		});
+	}
+	public async Session(suffix?: string): Promise<SessionCollection> {
+		if (!this.$db) await this.$connect();
+		return new Promise<SessionCollection>((resolve, reject) => {
+			resolve(new SessionCollection(this.$db, suffix));
+		});
+	}
+	public get $Entities(): rpc.EntityDefinition[] {
+		return [
+			new rpc.EntityDefinition("User",[
+				new rpc.FieldDefinition("_id", "string"),
+				new rpc.FieldDefinition("password", "string"),
+				new rpc.FieldDefinition("token", "string")
+			]),
+			new rpc.EntityDefinition("Pet",[
+				new rpc.FieldDefinition("_id", "string"),
+				new rpc.FieldDefinition("name", "string"),
+				new rpc.FieldDefinition("images", "string[]"),
+				new rpc.FieldDefinition("body", "PetBody")
+			]),
+			new rpc.EntityDefinition("Session",[
+				new rpc.FieldDefinition("_id", "string"),
+				new rpc.FieldDefinition("username", "string"),
+				new rpc.FieldDefinition("expireTime", "number")
+			])
+		];
+	}
+	public async $Collection(definition: rpc.EntityDefinition, suffix?: string): Promise<EntityCollection<any, any, any>> {
+		switch (definition.Name) {
+			case 'User': return await this.User(suffix);
+			case 'Pet': return await this.Pet(suffix);
+			case 'Session': return await this.Session(suffix);
+		}
+	}
+	public async $initializeIndices(): Promise<boolean>{
+		await (await this.Pet()).createIndex({ name: 1 });
+		return true;
+	}
+}
+
+```
