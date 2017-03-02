@@ -1,6 +1,6 @@
 {
   "name": "errisy-tsc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "a customized typescript compiler that transpile *.rpc.ts to *.client.ts for front end consumption and *.data.ts to *.sys.ts for typed MongoDB access. *.rpc.ts can be also transpiled to C# file for .net front ends.",
   "main": "index.js",
   "scripts": {
