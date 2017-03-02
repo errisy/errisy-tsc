@@ -1,7 +1,7 @@
 # errisy-tsc
 a customized typescript compiler transpiler
 
-## This has been Update to the latest TypesScript Compiler 2.2.1.
+## This has been Updated to the latest TypesScript Compiler 2.2.1.
 I constantly follow the (TypeScript)[https://github.com/Microsoft/TypeScript/] Releases. The core version will follow the TypeScript releases. I only added the RPC/Data Entity transpiler, and async/await Task features to the standard compiler.
 
 ## why transpile?
